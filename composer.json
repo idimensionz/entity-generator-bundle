@@ -1,5 +1,5 @@
 {
-    "name": "idimensionz/doctrine-entity-generator"
+    "name": "idimensionz/doctrine-entity-generator",
     "type": "library",
     "license": "MIT License",
     "require": {
