@@ -14,15 +14,28 @@
         "ext-iconv": "*",
         "doctrine/doctrine-bundle": "^1.9",
         "doctrine/orm": "^2.6",
-        "symfony/console": "*",
+        "symfony/cache": "^3.4",
+        "symfony/config": "^3.4",
+        "symfony/console": "^3.4",
+        "symfony/debug": "^3.4",
+        "symfony/dependency-injection": "^3.4",
+        "symfony/doctrine-bridge": "^3.4",
+        "symfony/dotenv": "^3.4",
+        "symfony/event-dispatcher": "^3.4",
+        "symfony/filesystem": "^3.4",
+        "symfony/finder": "^3.4",
         "symfony/flex": "^1.1",
-        "symfony/framework-bundle": "*",
-        "symfony/twig-bundle": "*",
-        "symfony/yaml": "*",
+        "symfony/framework-bundle": "^3.4",
+        "symfony/http-foundation": "^3.4",
+        "symfony/http-kernel": "^3.4",
+        "symfony/routing": "^3.4",
+        "symfony/symfony": "^3.4",
+        "symfony/twig-bridge": "^3.4",
+        "symfony/twig-bundle": "^3.4",
+        "symfony/yaml": "^3.4",
         "twig/twig": "^2.5"
     },
     "require-dev": {
-        "symfony/dotenv": "*"
     },
     "config": {
         "preferred-install": {
@@ -50,8 +63,7 @@
     },
     "scripts": {
         "auto-scripts": {
-            "cache:clear": "symfony-cmd",
-            "assets:install %PUBLIC_DIR%": "symfony-cmd"
+
         },
         "post-install-cmd": [
             "@auto-scripts"
@@ -60,13 +72,10 @@
             "@auto-scripts"
         ]
     },
-    "conflict": {
-        "symfony/symfony": "*"
-    },
     "extra": {
         "symfony": {
             "allow-contrib": false,
-            "require": ">=3.4"
+            "require": "~3.4"
         }
     }
 }
