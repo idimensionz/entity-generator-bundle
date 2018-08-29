@@ -1,0 +1,27 @@
+// @todo Add your namespace here
+
+use Doctrine\ORM\Mapping as ORM;
+
+/**
+* Account
+*
+* @ORM\Table(name="{{ tableName }}")
+*/
+class {{ entityClassName }}
+{
+{% for property in entityProperies %}
+    {% if property.name == "id" %}/**
+     * @var integer
+     *
+     * @ORM\Column(name="id", type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    {% else %}/**
+     * @var {{ property.phpDataType }}
+     *
+     * @ORM\Column(name="{{ property.columnName }}", type="{{ property.doctrineType }}"{% if property.doctrineLength is not empty %}{{ ', length=' ~ property.doctrineLength }}{% endif %}{% if property.doctrinePrecision is not empty %}{{ ', precision=' ~ property.doctrinePrecision ~ ', scale=' ~ property.doctrineScale }}{% endif %})
+     */
+    {% endif %}private ${{ property.name }};
+{% endfor %}
+}
