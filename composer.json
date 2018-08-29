@@ -2,6 +2,12 @@
     "name": "idimensionz/doctrine-entity-generator",
     "type": "library",
     "license": "MIT License",
+    "authors": [
+        {
+          "name": "Jim Mullen",
+          "email": "info@idimensionz.com"
+        }
+    ],
     "require": {
         "php": "^7.1.3",
         "ext-ctype": "*",
