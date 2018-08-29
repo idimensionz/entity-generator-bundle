@@ -1,7 +1,7 @@
 {
     "name": "idimensionz/doctrine-entity-generator",
     "type": "library",
-    "license": "MIT License",
+    "license": "MIT",
     "authors": [
         {
           "name": "Jim Mullen",
