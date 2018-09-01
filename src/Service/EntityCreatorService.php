@@ -2,14 +2,16 @@
 
 namespace iDimensionz\Service;
 
-use iDimensionz\Repository\EntityCreatorRepository;
+use iDimensionz\Model\ColumnDefinitionModel;
+use iDimensionz\Model\EntityPropertyModel;
+use iDimensionz\Provider\ColumnDefinitionProviderInterface;
 
 class EntityCreatorService
 {
     /**
-     * @var EntityCreatorRepository
+     * @var ColumnDefinitionProviderInterface
      */
-    private $repository;
+    private $columnDefinitionProvider;
     /**
      * @var array
      */
@@ -18,10 +20,14 @@ class EntityCreatorService
      * @var \Twig_Environment
      */
     private $twig;
+    /**
+     * @var EntityPropertyModel
+     */
+    private $entityPropertyModel;
 
-    public function __construct(EntityCreatorRepository $repository, \Twig_Environment $twig)
+    public function __construct(ColumnDefinitionProviderInterface $columnDefinitionProvider, \Twig_Environment $twig)
     {
-        $this->setRepository($repository);
+        $this->setColumnDefinitionProvider($columnDefinitionProvider);
         $this->setTwig($twig);
     }
 
@@ -42,7 +48,7 @@ class EntityCreatorService
             [
                 'tableName'         => $tableName,
                 'entityClassName'   => $entityClassName,
-                'entityProperies'   => $entityProperties
+                'entityProperties'   => $entityProperties
             ]
         );
 
@@ -56,7 +62,7 @@ class EntityCreatorService
      */
     public function getEntityPropertiesFromTableColumns(string $schemaName, string $tableName): array
     {
-        $columnDefinitions = $this->getRepository()->getColumnDefinitions($schemaName, $tableName);
+        $columnDefinitions = $this->getColumnDefinitionProvider()->getColumnDefinitions($schemaName, $tableName);
         foreach ($columnDefinitions as $columnDefinition) {
             $this->addEntityProperty($this->mapColumnDefinitionToEntityProperty($columnDefinition));
         }
@@ -65,30 +71,25 @@ class EntityCreatorService
     }
 
     /**
-     * @param array $columnDefinition
-     * @return array
+     * @param ColumnDefinitionModel $columnDefinition
+     * @return EntityPropertyModel
      */
-    public function mapColumnDefinitionToEntityProperty(array $columnDefinition): array
+    public function mapColumnDefinitionToEntityProperty(ColumnDefinitionModel $columnDefinition): EntityPropertyModel
     {
-        $entityProperty = [];
-        $entityProperty['name'] = $this->convertColumnNameToPropertyName($columnDefinition['COLUMN_NAME']);
-        list(
-            $entityProperty['phpDataType'],
-            $entityProperty['doctrineType'],
-            $entityProperty['doctrineLength'],
-            $entityProperty['doctrinePrecision'],
-            $entityProperty['doctrineScale']
-        ) =
-            $this->convertColumnDataType(
-                $columnDefinition['COLUMN_TYPE'],
-                $columnDefinition['CHARACTER_MAXIMUM_LENGTH'],
-                $columnDefinition['NUMERIC_PRECISION'],
-                $columnDefinition['NUMERIC_SCALE']
+        $this->entityPropertyModel = new EntityPropertyModel();
+        $this->entityPropertyModel->setName(
+            $this->convertColumnNameToPropertyName($columnDefinition->getColumnName())
+        );
+        $this->entityPropertyModel->setColumnName($columnDefinition->getColumnName());
+        $this->entityPropertyModel->setIsDoctrineNullable($columnDefinition->isNullable());
+        $this->convertColumnDataType(
+                $columnDefinition->getDataType(),
+                $columnDefinition->getCharacterMaximumLength(),
+                $columnDefinition->getNumericPrecision(),
+                $columnDefinition->getNumericScale()
             );
-        $entityProperty['columnName'] = $columnDefinition['COLUMN_NAME'];
-        $entityProperty['doctrineNullable'] = ('YES' === $columnDefinition['IS_NULLABLE'] ? 'true' : 'false');
 
-        return $entityProperty;
+        return $this->entityPropertyModel;
     }
 
     /**
@@ -97,6 +98,9 @@ class EntityCreatorService
      */
     public function convertColumnNameToPropertyName(string $columnName)
     {
+        // First, convert the entire string to lowercase.
+        $columnName = strtolower($columnName);
+
         if (false !== strpos($columnName, '_')) {
             $columnName = $this->convertUnderscoreToCamelCase($columnName);
         }
@@ -110,8 +114,6 @@ class EntityCreatorService
      */
     public function convertUnderscoreToCamelCase(string $string): string
     {
-        // First, convert the entire string to lowercase.
-        $string = strtolower($string);
         // Convert first letter after each underscore to capital letter.
         $string = ucwords($string, '_ ');
         // Remove all underscores.
@@ -128,7 +130,13 @@ class EntityCreatorService
         return $camelCase;
     }
 
-    public function convertColumnDataType($dataType, $maximumLength, $numericPrecision, $numericScale)
+    /**
+     * @param string   $dataType
+     * @param int|null $maximumLength
+     * @param int|null $numericPrecision
+     * @param int|null $numericScale
+     */
+    public function convertColumnDataType(string $dataType, ?int $maximumLength, ?int $numericPrecision, ?int $numericScale)
     {
         $doctrineLength = null;
         $doctrinePrecision = null;
@@ -142,12 +150,14 @@ class EntityCreatorService
                 break;
             case false !== strpos($dataType, 'varchar'):
             case false !== strpos($dataType, 'char'):
+            case false != strpos($dataType, 'enum'):
                 $propertyDataType = 'string';
                 $doctrineDataType = 'string';
                 break;
             case false !== strpos($dataType, 'text'):
                 $propertyDataType = 'string';
                 $doctrineDataType = 'text';
+                break;
             case false !== strpos($dataType, 'tinyint'):
             case false !== strpos($dataType, 'smallint'):
                 $propertyDataType = 'int';
@@ -162,15 +172,15 @@ class EntityCreatorService
                 $propertyDataType = 'int';
                 $doctrineDataType = 'int';
                 break;
-            case 'datetime':
-            case 'date':
-                $propertyDataType = '\DateTime';
-                $doctrineDataType = 'datetime';
-                break;
-            case 'float':
-            case 'decimal':
+            case false !== strpos($dataType, 'float'):
+            case false !== strpos($dataType, 'decimal'):
                 $propertyDataType = 'float';
                 $doctrineDataType = 'decimal';
+                break;
+            case 'datetime' === $dataType:
+            case 'date' === $dataType:
+                $propertyDataType = '\DateTime';
+                $doctrineDataType = 'datetime';
                 break;
             default:
                 $propertyDataType = 'string';
@@ -178,38 +188,39 @@ class EntityCreatorService
                 break;
         }
 
+        $this->entityPropertyModel->setPropertyDataType($propertyDataType);
+        $this->entityPropertyModel->setDoctrineDataType($doctrineDataType);
+
         if ('string' == $doctrineDataType) {
-            $doctrineLength = $maximumLength;
+            $this->entityPropertyModel->setDoctrineLength($maximumLength);
         }
 
         if ('decimal' == $doctrineDataType) {
-            $doctrinePrecision = $numericPrecision;
-            $doctrineScale = $numericScale;
+            $this->entityPropertyModel->setDoctrinePrecision($numericPrecision);
+            $this->entityPropertyModel->setDoctrineScale($numericScale);
         }
-
-        return [$propertyDataType, $doctrineDataType, $doctrineLength, $doctrinePrecision, $doctrineScale];
     }
 
     /**
-     * @return EntityCreatorRepository
+     * @return ColumnDefinitionProviderInterface
      */
-    protected function getRepository(): EntityCreatorRepository
+    protected function getColumnDefinitionProvider(): ColumnDefinitionProviderInterface
     {
-        return $this->repository;
+        return $this->columnDefinitionProvider;
     }
 
     /**
-     * @param EntityCreatorRepository $repository
+     * @param ColumnDefinitionProviderInterface $columnDefinitionProvider
      */
-    public function setRepository(EntityCreatorRepository $repository): void
+    public function setColumnDefinitionProvider(ColumnDefinitionProviderInterface $columnDefinitionProvider): void
     {
-        $this->repository = $repository;
+        $this->columnDefinitionProvider = $columnDefinitionProvider;
     }
 
     /**
      * @return array
      */
-    public function getEntityProperties(): array
+    protected function getEntityProperties(): array
     {
         return $this->entityProperties;
     }
@@ -233,7 +244,7 @@ class EntityCreatorService
     /**
      * @return \Twig_Environment
      */
-    public function getTwig(): \Twig_Environment
+    protected function getTwig(): \Twig_Environment
     {
         return $this->twig;
     }

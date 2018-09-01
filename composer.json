@@ -36,6 +36,8 @@
         "twig/twig": "^2.5"
     },
     "require-dev": {
+        "phake/phake": "^3.1",
+        "symfony/test-pack": "^1.0"
     },
     "config": {
         "preferred-install": {

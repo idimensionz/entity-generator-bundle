@@ -9,7 +9,7 @@ use Doctrine\ORM\Mapping as ORM;
 */
 class {{ entityClassName }}
 {
-{% for property in entityProperies %}
+{% for property in entityProperties %}
     {% if property.name == "id" %}/**
      * @var integer
      *
@@ -18,9 +18,9 @@ class {{ entityClassName }}
      * @ORM\GeneratedValue(strategy="AUTO")
      */
     {% else %}/**
-     * @var {{ property.phpDataType }}
+     * @var {{ property.propertyDataType }}
      *
-     * @ORM\Column(name="{{ property.columnName }}", type="{{ property.doctrineType }}"{% if property.doctrineLength is not empty %}{{ ', length=' ~ property.doctrineLength }}{% endif %}{% if property.doctrinePrecision is not empty %}{{ ', precision=' ~ property.doctrinePrecision ~ ', scale=' ~ property.doctrineScale }}{% endif %})
+     * @ORM\Column(name="{{ property.columnName }}", type="{{ property.doctrineDataType }}"{% if property.doctrineLength is not empty %}{{ ', length=' ~ property.doctrineLength }}{% endif %}{% if property.doctrinePrecision is not empty %}{{ ', precision=' ~ property.doctrinePrecision ~ ', scale=' ~ property.doctrineScale }}{% endif %}{% if property.isDoctrineNullable %}, nullable=true{% endif %})
      */
     {% endif %}private ${{ property.name }};
 {% endfor %}
