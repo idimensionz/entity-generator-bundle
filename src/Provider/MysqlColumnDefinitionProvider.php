@@ -72,23 +72,35 @@ class MysqlColumnDefinitionProvider implements ColumnDefinitionProviderInterface
     /**
      * @param array $item
      * @return ColumnDefinitionModel
+     * @throws \InvalidArgumentException
      */
-    private function mapDatabaseColumnInfoToColumnDefinition(array $item)
+    protected function mapDatabaseColumnInfoToColumnDefinition(array $item)
     {
+        if (!isset($item['COLUMN_NAME']) || !isset($item['COLUMN_TYPE']) || !isset($item['IS_NULLABLE'])) {
+            throw new \InvalidArgumentException(
+                __METHOD__ . '/Item parameter array must COLUMN_NAME, COLUMN_TYPE and IS_NULLABLE indexes.'
+            );
+        }
+
+        $length = isset($item['CHARACTER_MAXIMUM_LENGTH']) ? $item['CHARACTER_MAXIMUM_LENGTH'] : null;
+        $precision = isset($item['NUMERIC_PRECISION']) ? $item['NUMERIC_PRECISION'] : null;
+        $scale = isset($item['NUMERIC_SCALE']) ? $item['NUMERIC_SCALE'] : null;
+
         $columnDefinitionModel = new ColumnDefinitionModel();
         $columnDefinitionModel->setColumnName($item['COLUMN_NAME']);
         $columnDefinitionModel->setDataType($item['COLUMN_TYPE']);
         $columnDefinitionModel->setIsNullable('YES' === $item['IS_NULLABLE']);
-        $columnDefinitionModel->setCharacterMaximumLength($item['CHARACTER_MAXIMUM_LENGTH']);
-        $columnDefinitionModel->setNumericPrecision($item['NUMERIC_PRECISION']);
-        $columnDefinitionModel->setNumericScale($item['NUMERIC_SCALE']);
+        $columnDefinitionModel->setCharacterMaximumLength($length);
+        $columnDefinitionModel->setNumericPrecision($precision);
+        $columnDefinitionModel->setNumericScale($scale);
 
         return $columnDefinitionModel;
     }
+
     /**
      * @return Connection
      */
-    public function getConnection(): Connection
+    protected function getConnection(): Connection
     {
         return $this->connection;
     }
