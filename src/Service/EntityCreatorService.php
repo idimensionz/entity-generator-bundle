@@ -76,7 +76,7 @@ class EntityCreatorService
      */
     public function mapColumnDefinitionToEntityProperty(ColumnDefinitionModel $columnDefinition): EntityPropertyModel
     {
-        $this->entityPropertyModel = new EntityPropertyModel();
+        $this->setEntityPropertyModel(new EntityPropertyModel());
         $this->entityPropertyModel->setName(
             $this->convertColumnNameToPropertyName($columnDefinition->getColumnName())
         );
@@ -114,7 +114,9 @@ class EntityCreatorService
      */
     public function convertUnderscoreToCamelCase(string $string): string
     {
-        // Convert first letter after each underscore to capital letter.
+        // First, convert the entire string to lowercase.
+        $string = strtolower($string);
+        // Convert first letter of each word to capital letter.
         $string = ucwords($string, '_ ');
         // Remove all underscores.
         $string = str_replace('_', '', $string);
@@ -136,8 +138,12 @@ class EntityCreatorService
      * @param int|null $numericPrecision
      * @param int|null $numericScale
      */
-    public function convertColumnDataType(string $dataType, ?int $maximumLength, ?int $numericPrecision, ?int $numericScale)
-    {
+    public function convertColumnDataType(
+        string $dataType,
+        ?int $maximumLength = null,
+        ?int $numericPrecision = null,
+        ?int $numericScale = null
+    ) {
         $doctrineLength = null;
         $doctrinePrecision = null;
         $doctrineScale = null;
@@ -150,10 +156,15 @@ class EntityCreatorService
                 break;
             case false !== strpos($dataType, 'varchar'):
             case false !== strpos($dataType, 'char'):
-            case false != strpos($dataType, 'enum'):
+                $doctrineLength = $maximumLength;
                 $propertyDataType = 'string';
                 $doctrineDataType = 'string';
                 break;
+            case false !== strpos($dataType, 'enum'):
+                $propertyDataType = 'string';
+                $doctrineDataType = 'string';
+                break;
+            // Handles both text and longtext
             case false !== strpos($dataType, 'text'):
                 $propertyDataType = 'string';
                 $doctrineDataType = 'text';
@@ -187,18 +198,20 @@ class EntityCreatorService
                 $doctrineDataType = 'string';
                 break;
         }
-
-        $this->entityPropertyModel->setPropertyDataType($propertyDataType);
-        $this->entityPropertyModel->setDoctrineDataType($doctrineDataType);
+        $entityPropertyModel = $this->getEntityPropertyModel();
+        $entityPropertyModel->setPropertyDataType($propertyDataType);
+        $entityPropertyModel->setDoctrineDataType($doctrineDataType);
 
         if ('string' == $doctrineDataType) {
-            $this->entityPropertyModel->setDoctrineLength($maximumLength);
+            $entityPropertyModel->setDoctrineLength($doctrineLength);
         }
 
         if ('decimal' == $doctrineDataType) {
-            $this->entityPropertyModel->setDoctrinePrecision($numericPrecision);
-            $this->entityPropertyModel->setDoctrineScale($numericScale);
+            $entityPropertyModel->setDoctrinePrecision($numericPrecision);
+            $entityPropertyModel->setDoctrineScale($numericScale);
         }
+
+        $this->setEntityPropertyModel($entityPropertyModel);
     }
 
     /**
@@ -234,9 +247,9 @@ class EntityCreatorService
     }
 
     /**
-     * @param $entityProperty
+     * @param EntityPropertyModel $entityProperty
      */
-    public function addEntityProperty($entityProperty)
+    public function addEntityProperty(EntityPropertyModel $entityProperty)
     {
         $this->entityProperties[] = $entityProperty;
     }
@@ -255,5 +268,21 @@ class EntityCreatorService
     public function setTwig(\Twig_Environment $twig): void
     {
         $this->twig = $twig;
+    }
+
+    /**
+     * @return EntityPropertyModel
+     */
+    protected function getEntityPropertyModel(): EntityPropertyModel
+    {
+        return $this->entityPropertyModel;
+    }
+
+    /**
+     * @param EntityPropertyModel $entityPropertyModel
+     */
+    public function setEntityPropertyModel(EntityPropertyModel $entityPropertyModel): void
+    {
+        $this->entityPropertyModel = $entityPropertyModel;
     }
 }
