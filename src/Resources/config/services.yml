@@ -10,6 +10,6 @@ services:
       class: iDimensionz\EntityGeneratorBundle\Service\EntityCreatorService
       arguments: ["@idimensionz.mysql_column_definition_provider", "@twig"]
 
-    idimensionz-entity-generator-command:
+    idimensionz.entity_generator_command:
       class: iDimensionz\EntityGeneratorBundle\Command\GenerateEntityCommand
       arguments: ["@idimensionz.entity_creator_service", ~]
