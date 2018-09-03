@@ -1,10 +1,10 @@
 <?php
 
-namespace iDimensionz\Service;
+namespace iDimensionz\EntityGeneratorBundle\Service;
 
-use iDimensionz\Model\ColumnDefinitionModel;
-use iDimensionz\Model\EntityPropertyModel;
-use iDimensionz\Provider\ColumnDefinitionProviderInterface;
+use iDimensionz\EntityGeneratorBundle\Model\ColumnDefinitionModel;
+use iDimensionz\EntityGeneratorBundle\Model\EntityPropertyModel;
+use iDimensionz\EntityGeneratorBundle\Provider\ColumnDefinitionProviderInterface;
 
 class EntityCreatorService
 {

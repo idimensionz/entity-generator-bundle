@@ -26,7 +26,7 @@
  * SOFTWARE.
 */
 
-namespace iDimensionz\Model;
+namespace iDimensionz\EntityGeneratorBundle\Model;
 
 class EntityPropertyModel
 {

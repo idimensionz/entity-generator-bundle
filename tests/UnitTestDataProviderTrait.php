@@ -26,7 +26,7 @@
  * SOFTWARE.
 */
 
-namespace iDimensionz\Tests;
+namespace iDimensionz\EntityGeneratorBundle\Tests;
 
 trait UnitTestDataProviderTrait
 {

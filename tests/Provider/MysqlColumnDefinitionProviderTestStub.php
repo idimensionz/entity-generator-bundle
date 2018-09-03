@@ -26,10 +26,10 @@
  * SOFTWARE.
 */
 
-namespace iDimensionz\Tests\Provider;
+namespace iDimensionz\EntityGeneratorBundle\Tests\Provider;
 
 use Doctrine\DBAL\Connection;
-use iDimensionz\Provider\MysqlColumnDefinitionProvider;
+use iDimensionz\EntityGeneratorBundle\Provider\MysqlColumnDefinitionProvider;
 
 class MysqlColumnDefinitionProviderTestStub extends MysqlColumnDefinitionProvider
 {

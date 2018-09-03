@@ -47,12 +47,12 @@
     },
     "autoload": {
         "psr-4": {
-            "iDimensionz\\": "src/"
+            "iDimensionz\\EntityGeneratorBundle\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "iDimensionz\\Tests\\": "tests/"
+            "iDimensionz\\EntityGeneratorBundle\\Tests\\": "tests/"
         }
     },
     "replace": {

@@ -1,0 +1,4 @@
+services:
+#    i_dimensionz_doctrine_entity_generator.example:
+#        class: iDimensionz\DoctrineEntityGeneratorBundle\Example
+#        arguments: ["@service_id", "plain_value", "%parameter%"]

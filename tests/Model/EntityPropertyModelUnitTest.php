@@ -28,8 +28,8 @@
 
 namespace iDimensionz\Tests\Model;
 
-use iDimensionz\Model\EntityPropertyModel;
-use iDimensionz\Tests\UnitTestDataProviderTrait;
+use iDimensionz\EntityGeneratorBundle\Model\EntityPropertyModel;
+use iDimensionz\EntityGeneratorBundle\Tests\UnitTestDataProviderTrait;
 use PHPUnit\Framework\TestCase;
 
 class EntityPropertyModelUnitTest extends TestCase
@@ -86,11 +86,13 @@ class EntityPropertyModelUnitTest extends TestCase
     {
         $this->entityPropertyModel->setDoctrineScale($testValue);
         $actualValue = $this->entityPropertyModel->getDoctrineScale();
-        $this->assertSame($expectedValue, $testValue);
+        $this->assertSame($expectedValue, $actualValue);
     }
 
     /**
      * @dataProvider integerProviderWithNull
+     * @param          $testValue
+     * @param int|null $expectedValue
      */
     public function testGetDoctrinePrecision($testValue, ?int $expectedValue)
     {
@@ -113,6 +115,8 @@ class EntityPropertyModelUnitTest extends TestCase
 
     /**
      * @dataProvider booleanProvider
+     * @param $testValue
+     * @param $expectedValue
      */
     public function testIsDoctrineNullable($testValue, $expectedValue)
     {

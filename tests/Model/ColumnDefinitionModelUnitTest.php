@@ -28,8 +28,8 @@
 
 namespace iDimensionz\Tests\Model;
 
-use iDimensionz\Model\ColumnDefinitionModel;
-use iDimensionz\Tests\UnitTestDataProviderTrait;
+use iDimensionz\EntityGeneratorBundle\Model\ColumnDefinitionModel;
+use iDimensionz\EntityGeneratorBundle\Tests\UnitTestDataProviderTrait;
 use PHPUnit\Framework\TestCase;
 
 class ColumnDefinitionModelUnitTest extends TestCase

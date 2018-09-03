@@ -1,6 +1,6 @@
 <?php
 
-namespace iDimensionz;
+namespace iDimensionz\EntityGeneratorBundle;
 
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Component\Config\Loader\LoaderInterface;

@@ -26,12 +26,12 @@
  * SOFTWARE.
 */
 
-namespace iDimensionz\Tests\Service;
+namespace iDimensionz\EntityGeneratorBundle\Tests\Service;
 
 use Doctrine\Common\Collections\ArrayCollection;
-use iDimensionz\Model\ColumnDefinitionModel;
-use iDimensionz\Model\EntityPropertyModel;
-use iDimensionz\Provider\MysqlColumnDefinitionProvider;
+use iDimensionz\EntityGeneratorBundle\Model\ColumnDefinitionModel;
+use iDimensionz\EntityGeneratorBundle\Model\EntityPropertyModel;
+use iDimensionz\EntityGeneratorBundle\Provider\MysqlColumnDefinitionProvider;
 use PHPUnit\Framework\TestCase;
 
 class EntityCreatorServiceUnitTest extends TestCase

@@ -1,8 +1,8 @@
 <?php
 
-namespace iDimensionz\Command;
+namespace iDimensionz\EntityGeneratorBundle\Command;
 
-use iDimensionz\Service\EntityCreatorService;
+use iDimensionz\EntityGeneratorBundle\Service\EntityCreatorService;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;

@@ -26,10 +26,10 @@
  * SOFTWARE.
 */
 
-namespace iDimensionz\Provider;
+namespace iDimensionz\EntityGeneratorBundle\Provider;
 
 use Doctrine\Common\Collections\ArrayCollection;
-use iDimensionz\Model\ColumnDefinitionModel;
+use iDimensionz\EntityGeneratorBundle\Model\ColumnDefinitionModel;
 
 interface ColumnDefinitionProviderInterface
 {

@@ -1,0 +1,3 @@
+#i_dimensionz_doctrine_entity_generator_homepage:
+#    path:     /
+#    defaults: { _controller: iDimensionzDoctrineEntityGeneratorBundle:Default:index }

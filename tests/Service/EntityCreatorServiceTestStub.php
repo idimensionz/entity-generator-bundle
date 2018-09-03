@@ -26,11 +26,11 @@
  * SOFTWARE.
 */
 
-namespace iDimensionz\Tests\Service;
+namespace iDimensionz\EntityGeneratorBundle\Tests\Service;
 
-use iDimensionz\Model\EntityPropertyModel;
-use iDimensionz\Provider\ColumnDefinitionProviderInterface;
-use iDimensionz\Service\EntityCreatorService;
+use iDimensionz\EntityGeneratorBundle\Model\EntityPropertyModel;
+use iDimensionz\EntityGeneratorBundle\Provider\ColumnDefinitionProviderInterface;
+use iDimensionz\EntityGeneratorBundle\Service\EntityCreatorService;
 
 class EntityCreatorServiceTestStub extends EntityCreatorService
 {

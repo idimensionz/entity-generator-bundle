@@ -26,11 +26,11 @@
  * SOFTWARE.
 */
 
-namespace iDimensionz\Provider;
+namespace iDimensionz\EntityGeneratorBundle\Provider;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\DBAL\Connection;
-use iDimensionz\Model\ColumnDefinitionModel;
+use iDimensionz\EntityGeneratorBundle\Model\ColumnDefinitionModel;
 
 class MysqlColumnDefinitionProvider implements ColumnDefinitionProviderInterface
 {
