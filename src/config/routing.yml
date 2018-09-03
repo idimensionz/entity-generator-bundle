@@ -1,0 +1,4 @@
+i_dimensionz_doctrine_entity_generator:
+    resource: "@iDimensionzDoctrineEntityGeneratorBundle/Resources/config/routing.yml"
+    prefix:   /
+
