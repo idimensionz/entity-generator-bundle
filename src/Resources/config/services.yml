@@ -2,14 +2,3 @@ services:
 #    i_dimensionz_doctrine_entity_generator.example:
 #        class: iDimensionz\DoctrineEntityGeneratorBundle\Example
 #        arguments: ["@service_id", "plain_value", "%parameter%"]
-    idimensionz.mysql_column_definition_provider:
-      class: iDimensionz\EntityGeneratorBundle\Provider\MysqlColumnDefinitionProvider
-      arguments: [~]
-
-    idimensionz.entity_creator_service:
-      class: iDimensionz\EntityGeneratorBundle\Service\EntityCreatorService
-      arguments: ["@idimensionz.mysql_column_definition_provider", "@twig"]
-
-    idimensionz.entity_generator_command:
-      class: iDimensionz\EntityGeneratorBundle\Command\GenerateEntityCommand
-      arguments: ["@idimensionz.entity_creator_service", ~]
