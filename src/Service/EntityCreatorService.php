@@ -2,6 +2,7 @@
 
 namespace iDimensionz\EntityGeneratorBundle\Service;
 
+use Doctrine\DBAL\Schema\AbstractSchemaManager;
 use iDimensionz\EntityGeneratorBundle\Model\ColumnDefinitionModel;
 use iDimensionz\EntityGeneratorBundle\Model\EntityPropertyModel;
 use iDimensionz\EntityGeneratorBundle\Provider\ColumnDefinitionProviderInterface;
@@ -12,6 +13,10 @@ class EntityCreatorService
      * @var ColumnDefinitionProviderInterface
      */
     private $columnDefinitionProvider;
+    /**
+     * @var AbstractSchemaManager
+     */
+    private $schemaManager;
     /**
      * @var array
      */
@@ -25,9 +30,10 @@ class EntityCreatorService
      */
     private $entityPropertyModel;
 
-    public function __construct(ColumnDefinitionProviderInterface $columnDefinitionProvider, \Twig_Environment $twig)
+    public function __construct(ColumnDefinitionProviderInterface $columnDefinitionProvider, AbstractSchemaManager $schemaManager,  \Twig_Environment $twig)
     {
         $this->setColumnDefinitionProvider($columnDefinitionProvider);
+        $this->setSchemaManager($schemaManager);
         $this->setTwig($twig);
     }
 
@@ -215,6 +221,31 @@ class EntityCreatorService
     }
 
     /**
+     * @return array
+     */
+    public function getAllDatabases()
+    {
+        return $this->getSchemaManager()->listDatabases();
+    }
+
+    /**
+     * @return string
+     */
+    public function getCurrentDatabaseName()
+    {
+        $schemaSearchPaths = $this->getSchemaManager()->getSchemaSearchPaths();
+        return $schemaSearchPaths[0];
+    }
+
+    /**
+     * @return array|string[]
+     */
+    public function getTableNames()
+    {
+        return $this->getSchemaManager()->listTableNames();
+    }
+
+    /**
      * @return ColumnDefinitionProviderInterface
      */
     protected function getColumnDefinitionProvider(): ColumnDefinitionProviderInterface
@@ -228,6 +259,22 @@ class EntityCreatorService
     public function setColumnDefinitionProvider(ColumnDefinitionProviderInterface $columnDefinitionProvider): void
     {
         $this->columnDefinitionProvider = $columnDefinitionProvider;
+    }
+
+    /**
+     * @return AbstractSchemaManager
+     */
+    public function getSchemaManager(): AbstractSchemaManager
+    {
+        return $this->schemaManager;
+    }
+
+    /**
+     * @param AbstractSchemaManager $schemaManager
+     */
+    public function setSchemaManager(AbstractSchemaManager $schemaManager): void
+    {
+        $this->schemaManager = $schemaManager;
     }
 
     /**

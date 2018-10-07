@@ -52,6 +52,8 @@ class MysqlColumnDefinitionProvider implements ColumnDefinitionProviderInterface
      */
     public function getColumnDefinitions(string $schemaName, string $tableName): ArrayCollection
     {
+        // @todo Change this to use schemaManager->listTableColumns()
+//        $this->getConnection()->getSchemaManager()->listTableColumns($tableName, $schemaName);
         $sql = "SELECT COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE, CHARACTER_MAXIMUM_LENGTH, NUMERIC_PRECISION, NUMERIC_SCALE
             FROM INFORMATION_SCHEMA.COLUMNS
            WHERE TABLE_SCHEMA = ?

@@ -22,3 +22,10 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+    Doctrine\DBAL\Schema\AbstractSchemaManager:
+        class: Doctrine\DBAL\Schema\MySqlSchemaManager
+        public: false
+
+    app.schema_manager:
+        alias: Doctrine\DBAL\Schema\AbstractSchemaManager
+        public: true

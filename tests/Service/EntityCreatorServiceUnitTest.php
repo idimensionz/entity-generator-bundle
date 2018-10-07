@@ -29,6 +29,8 @@
 namespace iDimensionz\EntityGeneratorBundle\Tests\Service;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\DBAL\Schema\AbstractSchemaManager;
+use Doctrine\DBAL\Schema\MySqlSchemaManager;
 use iDimensionz\EntityGeneratorBundle\Model\ColumnDefinitionModel;
 use iDimensionz\EntityGeneratorBundle\Model\EntityPropertyModel;
 use iDimensionz\EntityGeneratorBundle\Provider\MysqlColumnDefinitionProvider;
@@ -56,6 +58,10 @@ class EntityCreatorServiceUnitTest extends TestCase
      * @var ColumnDefinitionModel
      */
     private $columnDefinitionModel;
+    /**
+     * @var AbstractSchemaManager
+     */
+    private $mockSchemaManager;
 
     public function setUp()
     {
@@ -64,12 +70,13 @@ class EntityCreatorServiceUnitTest extends TestCase
         $this->columnDefinitions = new ArrayCollection();
         $this->columnDefinitions->add($this->columnDefinitionModel);
         $this->columnDefinitionProvider = \Phake::mock(MysqlColumnDefinitionProvider::class);
+        $this->mockSchemaManager = \Phake::mock(MySqlSchemaManager::class);
         \Phake::when($this->columnDefinitionProvider)->getColumnDefinitions(\Phake::anyParameters())
             ->thenReturn($this->columnDefinitions);
         $this->twig = \Phake::mock(\Twig_Environment::class);
         \Phake::when($this->twig)->render(\Phake::anyParameters())
             ->thenReturn('some class code');
-        $this->entityCreatorService = new EntityCreatorServiceTestStub($this->columnDefinitionProvider, $this->twig);
+        $this->entityCreatorService = new EntityCreatorServiceTestStub($this->columnDefinitionProvider, $this->mockSchemaManager, $this->twig);
     }
 
     public function tearDown()
