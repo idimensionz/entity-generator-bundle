@@ -62,6 +62,14 @@ class EntityCreatorServiceUnitTest extends TestCase
      * @var AbstractSchemaManager
      */
     private $mockSchemaManager;
+    /**
+     * @var array
+     */
+    private $expectedDatabases;
+    /**
+     * @var array
+     */
+    private $expectedTableNames;
 
     public function setUp()
     {
@@ -132,6 +140,13 @@ class EntityCreatorServiceUnitTest extends TestCase
         $actualValue = $this->entityCreatorService->getEntityProperties();
         $this->assertTrue(is_array($actualValue));
         $this->assertSame($expectedValue, $actualValue);
+    }
+
+    public function testSchemaManagerGetterAndSetter()
+    {
+        $this->hasMockSchemaManager();
+        $actualSchemaManager = $this->entityCreatorService->getSchemaManager();
+        $this->assertSame($this->mockSchemaManager, $actualSchemaManager);
     }
 
     public function testAddEntityProperty()
@@ -323,6 +338,28 @@ class EntityCreatorServiceUnitTest extends TestCase
         $this->assertNull($actualModel->getDoctrinePrecision());
     }
 
+    public function testGetAllDatabases()
+    {
+        $this->hasMockSchemaManager();
+        $actualDatabases = $this->entityCreatorService->getAllDatabases();
+        $this->assertSame($this->expectedDatabases, $actualDatabases);
+        \Phake::verify($this->mockSchemaManager, \Phake::times(1))->listDatabases();
+    }
+
+    public function testGetCurrentDatabaseName()
+    {
+        $this->hasMockSchemaManager();
+        $actualDatabaseName = $this->entityCreatorService->getCurrentDatabaseName();
+        $this->assertSame($this->expectedDatabases[0], $actualDatabaseName);
+    }
+
+    public function testGetTableNames()
+    {
+        $this->hasMockSchemaManager();
+        $actualTableNames = $this->entityCreatorService->getTableNames();
+        $this->assertSame($this->expectedTableNames, $actualTableNames);
+    }
+
     public function testMapColumnDefinitionToEntityPropertyForDatetimeColumn()
     {
         $columnDefinitionModel = new ColumnDefinitionModel();
@@ -432,5 +469,23 @@ class EntityCreatorServiceUnitTest extends TestCase
         $columnDefinitionModel->setIsNullable(false);
 
         return $columnDefinitionModel;
+    }
+
+    private function hasMockSchemaManager()
+    {
+        $this->mockSchemaManager = \Phake::mock(AbstractSchemaManager::class);
+
+        $this->expectedDatabases = ['db1', 'mysql', 'information_schema'];
+        \Phake::when($this->mockSchemaManager)->listDatabases()
+            ->thenReturn($this->expectedDatabases);
+
+        \Phake::when($this->mockSchemaManager)->getSchemaSearchPaths()
+            ->thenReturn([$this->expectedDatabases[0]]);
+
+        $this->expectedTableNames = ['some_table', 'another_table', 'my_table', 'your_table'];
+        \Phake::when($this->mockSchemaManager)->listTableNames()
+            ->thenReturn($this->expectedTableNames);
+
+        $this->entityCreatorService->setSchemaManager($this->mockSchemaManager);
     }
 }

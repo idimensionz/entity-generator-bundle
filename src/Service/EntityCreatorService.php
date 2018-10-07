@@ -264,7 +264,7 @@ class EntityCreatorService
     /**
      * @return AbstractSchemaManager
      */
-    public function getSchemaManager(): AbstractSchemaManager
+    protected function getSchemaManager(): AbstractSchemaManager
     {
         return $this->schemaManager;
     }
