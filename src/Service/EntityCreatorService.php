@@ -181,7 +181,7 @@ class EntityCreatorService
                 break;
             case false !== strpos($dataType, 'int'):
                 $propertyDataType = 'int';
-                $doctrineDataType = 'int';
+                $doctrineDataType = 'integer';
                 break;
             case false !== strpos($dataType, 'float'):
             case false !== strpos($dataType, 'decimal'):

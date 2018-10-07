@@ -267,7 +267,7 @@ class EntityCreatorServiceUnitTest extends TestCase
         $this->entityCreatorService->convertColumnDataType($type);
         $actualModel = $this->entityCreatorService->getEntityPropertyModel();
         $this->assertSame('int', $actualModel->getPropertyDataType());
-        $this->assertSame('int', $actualModel->getDoctrineDataType());
+        $this->assertSame('integer', $actualModel->getDoctrineDataType());
         $this->assertNull($actualModel->getDoctrineLength());
         $this->assertNull($actualModel->getDoctrineScale());
         $this->assertNull($actualModel->getDoctrinePrecision());
