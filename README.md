@@ -1,4 +1,7 @@
 # iDimensionz Doctrine Entity Generator
+
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/be0f3c611c154650a696ce9f988ad7c7)](https://app.codacy.com/app/idimensionz/entity-generator-bundle?utm_source=github.com&utm_medium=referral&utm_content=idimensionz/entity-generator-bundle&utm_campaign=Badge_Grade_Dashboard)
+
 Symfony service and console command that does a simple reverse engineer of MySQL tables into entity classes.
 
 ## Configuration
