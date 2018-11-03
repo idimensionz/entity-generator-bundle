@@ -2,7 +2,7 @@
 /*
  * iDimensionz/{entity-generator-bundle}
  * GenerateEntityCommandUnitTest.php
- *  
+ *
  * The MIT License (MIT)
  * 
  * Copyright (c) 2018 Dimensionz
@@ -87,7 +87,6 @@ class GenerateEntityCommandUnitTest extends TestCase
         $this->assertNull($actualOption->getShortcut());
         $this->assertTrue($actualOption->isValueRequired());
         $this->assertSame('Schema (database) where the table exists.', $actualOption->getDescription());
-
     }
 
     public function testInteractWhenSchemaNameNotSupplied()

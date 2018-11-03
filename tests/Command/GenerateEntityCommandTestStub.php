@@ -2,7 +2,7 @@
 /*
  * iDimensionz/{entity-generator-bundle}
  * GenerateEntityCommandTestStub.php
- *  
+ *
  * The MIT License (MIT)
  * 
  * Copyright (c) 2018 Dimensionz
