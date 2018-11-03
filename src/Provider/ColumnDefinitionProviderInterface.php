@@ -1,11 +1,11 @@
 <?php
 /*
- * iDimensionz/{doctrine-entity-generator}
+ * iDimensionz/doctrine-entity-generator
  * ColumnDefinitionProviderInterface.php
  *  
  * The MIT License (MIT)
  * 
- * Copyright (c) 2018 Dimensionz
+ * Copyright (c) 2018 iDimensionz
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal

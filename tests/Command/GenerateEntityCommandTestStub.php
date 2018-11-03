@@ -1,6 +1,6 @@
 <?php
 /*
- * iDimensionz/{entity-generator-bundle}
+ * iDimensionz/entity-generator-bundle
  * GenerateEntityCommandTestStub.php
  *
  * The MIT License (MIT)
