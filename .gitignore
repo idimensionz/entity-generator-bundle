@@ -5,9 +5,8 @@
 /vendor/
 ###< symfony/framework-bundle ###
 .idea/
-
+/code-coverage-report
 ###> symfony/phpunit-bridge ###
 .phpunit
 /phpunit.xml
 ###< symfony/phpunit-bridge ###
-/code-coverage-report
