@@ -131,7 +131,8 @@ class GenerateEntityCommandUnitTest extends TestCase
         $this->generateEntityCommand->setSchemaQuestion();
         $actualQuestion = $this->generateEntityCommand->getSchemaQuestion();
         $this->assertInstanceOf(Question::class, $actualQuestion);
-        $expectedQuestion = "What is the schema (i.e. database) name where the table exists? <info>[{$currentDatabase}]</info> ";
+        $expectedQuestion = 'What is the schema (i.e. database) name where the table exists? ' .
+            "<info>[{$currentDatabase}]</info> ";
         $this->assertSame($expectedQuestion, $actualQuestion->getQuestion());
         $this->assertSame($currentDatabase, $actualQuestion->getDefault());
         $this->assertSame($databases, $actualQuestion->getAutocompleterValues());

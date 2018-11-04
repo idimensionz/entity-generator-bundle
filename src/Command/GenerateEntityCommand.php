@@ -210,7 +210,8 @@ class GenerateEntityCommand extends ContainerAwareCommand
     {
         if (is_null($schemaQuestion)) {
             $currentDatabase = $this->getCurrentDatabase();
-            $schemaQuestion = "What is the schema (i.e. database) name where the table exists? <info>[{$currentDatabase}]</info> ";
+            $schemaQuestion = 'What is the schema (i.e. database) name where the table exists? ' .
+                "<info>[{$currentDatabase}]</info> ";
             $schemaQuestion = new Question($schemaQuestion, $currentDatabase);
             $databases = $this->getDatabases();
             $schemaQuestion->setAutocompleterValues($databases);
