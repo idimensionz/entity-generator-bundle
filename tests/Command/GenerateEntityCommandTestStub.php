@@ -54,4 +54,9 @@ class GenerateEntityCommandTestStub extends GenerateEntityCommand
     {
         return parent::getEntityCreatorService();
     }
+
+    public function getSchemaQuestion()
+    {
+        return parent::getSchemaQuestion();
+    }
 }

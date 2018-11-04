@@ -36,6 +36,7 @@ use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\Input;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\Output;
+use Symfony\Component\Console\Question\Question;
 
 class GenerateEntityCommandUnitTest extends TestCase
 {
@@ -44,7 +45,7 @@ class GenerateEntityCommandUnitTest extends TestCase
      */
     private $generateEntityCommand;
     /**
-     * @var EntityCreatorService
+     * @var EntityCreatorService|\Phake_IMock
      */
     private $entityCreatorService;
 
@@ -89,6 +90,55 @@ class GenerateEntityCommandUnitTest extends TestCase
         $this->assertSame('Schema (database) where the table exists.', $actualOption->getDescription());
     }
 
+    public function testValidateSchemaReturnsFalseWhenParameterIsEmpty()
+    {
+        $this->generateEntityCommand->setDatabases($this->getDatabases());
+        $result = $this->generateEntityCommand->validateSchema('');
+        $this->assertFalse($result);
+    }
+
+    public function testValidateSchemaReturnsFalseWhenParameterNotEmptyAndNotInDatabases()
+    {
+        $this->generateEntityCommand->setDatabases($this->getDatabases());
+        $result = $this->generateEntityCommand->validateSchema('invalid database');
+        $this->assertFalse($result);
+    }
+
+    public function testValidateSchemaReturnsTrueWhenParameterNotEmptyAndInDatabases()
+    {
+        $this->generateEntityCommand->setDatabases($this->getDatabases());
+        $result = $this->generateEntityCommand->validateSchema($this->getCurrentDatabase());
+        $this->assertTrue($result);
+    }
+
+    public function testSetSchemaWhenQuestionSupplied()
+    {
+        $expectedQuestion = \Phake::mock(Question::class);
+        $this->generateEntityCommand->setSchemaQuestion($expectedQuestion);
+        $actualQuestion = $this->generateEntityCommand->getSchemaQuestion();
+
+        $this->assertInstanceOf(Question::class, $actualQuestion);
+        $this->assertInstanceOf(\Phake_IMock::class, $actualQuestion);
+        $this->assertSame($expectedQuestion, $actualQuestion);
+    }
+
+    public function testSetSchemaWhenQuestionNotSupplied()
+    {
+        $databases = $this->getDatabases();
+        $this->generateEntityCommand->setDatabases($databases);
+        $currentDatabase = $this->getCurrentDatabase();
+        $this->generateEntityCommand->setCurrentDatabase($currentDatabase);
+        $this->generateEntityCommand->setSchemaQuestion();
+        $actualQuestion = $this->generateEntityCommand->getSchemaQuestion();
+        $this->assertInstanceOf(Question::class, $actualQuestion);
+        $expectedQuestion = "What is the schema (i.e. database) name where the table exists? <info>[{$currentDatabase}]</info> ";
+        $this->assertSame($expectedQuestion, $actualQuestion->getQuestion());
+        $this->assertSame($currentDatabase, $actualQuestion->getDefault());
+        $this->assertSame($databases, $actualQuestion->getAutocompleterValues());
+        $expectedCallable = [$this->generateEntityCommand, 'validateSchema'];
+        $this->assertSame($expectedCallable, $actualQuestion->getValidator());
+    }
+
     public function testInteractWhenSchemaNameNotSupplied()
     {
         $questionHelper = \Phake::mock(QuestionHelper::class);
@@ -104,11 +154,8 @@ class GenerateEntityCommandUnitTest extends TestCase
         \Phake::when($input)->getOption('entity-class-name')
             ->thenReturn('some-entity-class');
         $output = \Phake::mock(Output::class);
-        $entityCreatorService = \Phake::mock(EntityCreatorService::class);
-        \Phake::when($entityCreatorService)->getAllDatabases()
-            ->thenReturn(['mysql', 'schema_information', 'database1']);
-        \Phake::when($entityCreatorService)->getCurrentDatabaseName()
-            ->thenReturn('database1');
+        $this->hasEntityCreatorService();
+        $this->generateEntityCommand->setEntityCreatorService($this->entityCreatorService);
 
         $this->generateEntityCommand->interact($input, $output);
         \Phake::verify($this->entityCreatorService, \Phake::times(1))->getAllDatabases();
@@ -124,5 +171,30 @@ class GenerateEntityCommandUnitTest extends TestCase
     public function testInteractWhenEntityClassNameNotSupplied()
     {
         $this->markTestIncomplete();
+    }
+
+    protected function hasEntityCreatorService(): void
+    {
+        $this->entityCreatorService = \Phake::mock(EntityCreatorService::class);
+        \Phake::when($this->entityCreatorService)->getAllDatabases()
+            ->thenReturn($this->getDatabases());
+        \Phake::when($this->entityCreatorService)->getCurrentDatabaseName()
+            ->thenReturn($this->getCurrentDatabase());
+    }
+
+    /**
+     * @return array
+     */
+    protected function getDatabases()
+    {
+        return ['mysql', 'schema_information', 'database1'];
+    }
+
+    /**
+     * @return string
+     */
+    protected function getCurrentDatabase()
+    {
+        return 'database1';
     }
 }

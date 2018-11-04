@@ -16,6 +16,18 @@ class GenerateEntityCommand extends ContainerAwareCommand
      * @var EntityCreatorService
      */
     private $entityCreatorService;
+    /**
+     * @var Question
+     */
+    private $schemaQuestion;
+    /**
+     * @var array
+     */
+    private $databases;
+    /**
+     * @var string
+     */
+    private $currentDatabase;
 
     /**
      * GenerateEntityCommand constructor.
@@ -68,14 +80,10 @@ class GenerateEntityCommand extends ContainerAwareCommand
         $schemaName = $input->getOption('schema-name');
         if (empty($schemaName)) {
             $databases = $this->getEntityCreatorService()->getAllDatabases();
+            $this->setDatabases($databases);
             $currentDatabase = $this->getEntityCreatorService()->getCurrentDatabaseName();
-            $schemaQuestion = new Question("What is the schema (i.e. database) name where the table exists? <info>[{$currentDatabase}]</info> ", $currentDatabase);
-            $schemaQuestion->setAutocompleterValues($databases);
-            $schemaQuestion->setValidator(
-                function ($response) use ($databases) {
-                    return !empty($response) && in_array($response, $databases);
-                }
-            );
+            $this->setCurrentDatabase($currentDatabase);
+            $schemaQuestion = $this->getSchemaQuestion();
             $schemaNameChoice = $questionHelper->ask($input, $output, $schemaQuestion);
             $schemaName = $databases[$schemaNameChoice+1];
         }
@@ -95,7 +103,7 @@ class GenerateEntityCommand extends ContainerAwareCommand
 
                     return $inputTableName;
                 }
-                );
+            );
             $tableName = $questionHelper->ask($input, $output, $tableQuestion);
         }
         $output->writeln("You selected table <info>{$tableName}</info>");
@@ -139,6 +147,15 @@ class GenerateEntityCommand extends ContainerAwareCommand
     }
 
     /**
+     * @param string $database
+     * @return bool
+     */
+    public function validateSchema(string $database)
+    {
+        return !empty($database) && in_array($database, $this->getDatabases());
+    }
+
+    /**
      * @return EntityCreatorService
      */
     protected function getEntityCreatorService(): EntityCreatorService
@@ -152,5 +169,67 @@ class GenerateEntityCommand extends ContainerAwareCommand
     public function setEntityCreatorService(EntityCreatorService $entityCreatorService): void
     {
         $this->entityCreatorService = $entityCreatorService;
+    }
+
+    /**
+     * @return array
+     */
+    public function getDatabases(): array
+    {
+        return $this->databases;
+    }
+
+    /**
+     * @param array $databases
+     */
+    public function setDatabases(array $databases): void
+    {
+        $this->databases = $databases;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCurrentDatabase(): string
+    {
+        return $this->currentDatabase;
+    }
+
+    /**
+     * @param string $currentDatabase
+     */
+    public function setCurrentDatabase(string $currentDatabase): void
+    {
+        $this->currentDatabase = $currentDatabase;
+    }
+
+    /**
+     * @param Question|null $schemaQuestion
+     */
+    public function setSchemaQuestion(?Question $schemaQuestion = null)
+    {
+        if (is_null($schemaQuestion)) {
+            $currentDatabase = $this->getCurrentDatabase();
+            $schemaQuestion = "What is the schema (i.e. database) name where the table exists? <info>[{$currentDatabase}]</info> ";
+            $schemaQuestion = new Question($schemaQuestion, $currentDatabase);
+            $databases = $this->getDatabases();
+            $schemaQuestion->setAutocompleterValues($databases);
+            $validator = [$this, 'validateSchema'];
+            $schemaQuestion->setValidator($validator);
+        }
+
+        $this->schemaQuestion = $schemaQuestion;
+    }
+
+    /**
+     * @return Question
+     */
+    protected function getSchemaQuestion()
+    {
+        if (!$this->schemaQuestion instanceof Question) {
+            $this->setSchemaQuestion();
+        }
+
+        return $this->schemaQuestion;
     }
 }
