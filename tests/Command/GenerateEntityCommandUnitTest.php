@@ -28,7 +28,6 @@
 
 namespace iDimensionz\EntityGeneratorBundle\Tests\Command;
 
-use DoctrineTest\InstantiatorTestAsset\PharAsset;
 use iDimensionz\EntityGeneratorBundle\Service\EntityCreatorService;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Helper\HelperSet;
@@ -47,19 +46,52 @@ class GenerateEntityCommandUnitTest extends TestCase
     /**
      * @var EntityCreatorService|\Phake_IMock
      */
-    private $entityCreatorService;
+    private $mockEntityCreatorService;
+    /**
+     * @var array
+     */
+    private $databases;
+    /**
+     * @var array
+     */
+    private $tableNames;
+    /**
+     * @var QuestionHelper|\Phake_IMock
+     */
+    private $questionHelper;
+    /**
+     * @var HelperSet
+     */
+    private $helperSet;
+    /**
+     * @var string
+     */
+    private $entityClassContent;
 
-    public function setUp()
+    protected function setUp()
     {
         parent::setUp();
-        $this->entityCreatorService = \Phake::mock(EntityCreatorService::class);
-        $this->generateEntityCommand = new GenerateEntityCommandTestStub($this->entityCreatorService);
+        $this->hasEntityCreatorService();
+        $this->generateEntityCommand = new GenerateEntityCommandTestStub($this->mockEntityCreatorService);
+    }
+
+    protected function tearDown()
+    {
+        unset($this->entityClassContent);
+        unset($this->helperSet);
+        unset($this->questionHelper);
+        unset($this->tableNames);
+        unset($this->databases);
+        unset($this->mockEntityCreatorService);
+        unset($this->generateEntityCommand);
+        parent::tearDown();
+
     }
 
     public function testConstruct()
     {
         $actualEntityCreatorService = $this->generateEntityCommand->getEntityCreatorService();
-        $this->assertSame($this->entityCreatorService, $actualEntityCreatorService);
+        $this->assertSame($this->mockEntityCreatorService, $actualEntityCreatorService);
         $this->assertInstanceOf(\Phake_IMock::class, $actualEntityCreatorService);
     }
 
@@ -71,116 +103,193 @@ class GenerateEntityCommandUnitTest extends TestCase
         $actualDescription = $this->generateEntityCommand->getDescription();
         $this->assertSame('Generates the code for an entity class for the specified table.', $actualDescription);
 
-        $actualOption = $this->generateEntityCommand->getDefinition()->getOption('schema-name');
+        $actualOption = $this->generateEntityCommand->getDefinition()->getOption('table-name');
         $this->assertInstanceOf(InputOption::class, $actualOption);
-        $this->assertSame('schema-name', $actualOption->getName());
+        $this->assertSame('table-name', $actualOption->getName());
         $this->assertNull($actualOption->getShortcut());
         $this->assertTrue($actualOption->isValueRequired());
-        $this->assertSame('Schema (database) where the table exists.', $actualOption->getDescription());
-
-        //                'table-name',
-        //                null,
-        //                InputOption::VALUE_REQUIRED,
-        //                'Generate an entity class for this table.'
-        $actualOption = $this->generateEntityCommand->getDefinition()->getOption('schema-name');
-        $this->assertInstanceOf(InputOption::class, $actualOption);
-        $this->assertSame('schema-name', $actualOption->getName());
-        $this->assertNull($actualOption->getShortcut());
-        $this->assertTrue($actualOption->isValueRequired());
-        $this->assertSame('Schema (database) where the table exists.', $actualOption->getDescription());
+        $this->assertSame('Generate an entity class for this table.', $actualOption->getDescription());
     }
 
-    public function testValidateSchemaReturnsFalseWhenParameterIsEmpty()
+    /**
+     * @expectedException \Exception
+     */
+    public function testValidateTableNamesThrowsExceptionWhenTableNameEmpty()
     {
-        $this->generateEntityCommand->setDatabases($this->getDatabases());
-        $result = $this->generateEntityCommand->validateSchema('');
-        $this->assertFalse($result);
+        $this->generateEntityCommand->setTableNames($this->getTableNames());
+        $tableName = '';
+        $this->generateEntityCommand->validateTableName($tableName);
     }
 
-    public function testValidateSchemaReturnsFalseWhenParameterNotEmptyAndNotInDatabases()
+    /**
+     * @expectedException \Exception
+     */
+    public function testValidateTableNamesThrowsExceptionWhenTableNameNotValid()
     {
-        $this->generateEntityCommand->setDatabases($this->getDatabases());
-        $result = $this->generateEntityCommand->validateSchema('invalid database');
-        $this->assertFalse($result);
+        $this->generateEntityCommand->setTableNames($this->getTableNames());
+        $tableName = 'not a valid table name';
+        $this->generateEntityCommand->validateTableName($tableName);
     }
 
-    public function testValidateSchemaReturnsTrueWhenParameterNotEmptyAndInDatabases()
+    public function testValidateTableNamesReturnsParameterWhenValid()
     {
-        $this->generateEntityCommand->setDatabases($this->getDatabases());
-        $result = $this->generateEntityCommand->validateSchema($this->getCurrentDatabase());
-        $this->assertTrue($result);
+        $this->generateEntityCommand->setTableNames($this->getTableNames());
+        $tableName = $this->tableNames[0];
+        $actualTableName = $this->generateEntityCommand->validateTableName($tableName);
+        $this->assertSame($tableName, $actualTableName);
     }
 
-    public function testSetSchemaWhenQuestionSupplied()
+    /**
+     * @expectedException \Exception
+     */
+    public function testValidateEntityClassNameThrowsExceptionWhenParameterEmpty()
     {
-        $expectedQuestion = \Phake::mock(Question::class);
-        $this->generateEntityCommand->setSchemaQuestion($expectedQuestion);
-        $actualQuestion = $this->generateEntityCommand->getSchemaQuestion();
+        $this->generateEntityCommand->validateEntityClassName('');
+    }
 
+    /**
+     * @expectedException \Exception
+     */
+    public function testValidateEntityClassNameThrowsExceptionWhenClassExists()
+    {
+        $this->generateEntityCommand->validateEntityClassName(self::class);
+    }
+
+    public function testValidateEntityClassNameReturnsClassNameWhenValid()
+    {
+        $expectedClassName = 'someNewEntityClass';
+        $actualClassName = $this->generateEntityCommand->validateEntityClassName($expectedClassName);
+        $this->assertSame($expectedClassName, $actualClassName);
+    }
+
+    public function testEntityCreatorServiceGetterAndSetter()
+    {
+        $entityCreatorService = \Phake::mock(EntityCreatorService::class);
+        $this->generateEntityCommand->setEntityCreatorService($entityCreatorService);
+        $actualService = $this->generateEntityCommand->getEntityCreatorService();
+        $this->assertInstanceOf(EntityCreatorService::class, $actualService);
+        $this->assertInstanceOf(\Phake_IMock::class, $actualService);
+        $this->assertSame($entityCreatorService, $actualService);
+    }
+
+    public function testTableQuestionGetterAndSetterWhenQuestionSupplied()
+    {
+        $mockQuestion = \Phake::mock(Question::class);
+        $this->generateEntityCommand->setTableQuestion($mockQuestion);
+        $actualQuestion = $this->generateEntityCommand->getTableQuestion();
         $this->assertInstanceOf(Question::class, $actualQuestion);
         $this->assertInstanceOf(\Phake_IMock::class, $actualQuestion);
-        $this->assertSame($expectedQuestion, $actualQuestion);
+        $this->assertSame($mockQuestion, $actualQuestion);
     }
 
-    public function testSetSchemaWhenQuestionNotSupplied()
+    public function testTableQuestionGetterAndSetterWhenQuestionNotSupplied()
     {
-        $databases = $this->getDatabases();
-        $this->generateEntityCommand->setDatabases($databases);
-        $currentDatabase = $this->getCurrentDatabase();
-        $this->generateEntityCommand->setCurrentDatabase($currentDatabase);
-        $this->generateEntityCommand->setSchemaQuestion();
-        $actualQuestion = $this->generateEntityCommand->getSchemaQuestion();
+        $this->generateEntityCommand->setTableNames($this->getTableNames());
+        $this->generateEntityCommand->setTableQuestion();
+        $actualQuestion = $this->generateEntityCommand->getTableQuestion();
+        $this->assertDefaultTableQuestion($actualQuestion);
+    }
+
+    public function testGetTableQuestionWhenQuestionNotSet()
+    {
+        $this->generateEntityCommand->setTableNames($this->getTableNames());
+        $actualQuestion = $this->generateEntityCommand->getTableQuestion();
+        $this->assertDefaultTableQuestion($actualQuestion);
+    }
+
+    public function testEntityClassNameGetterAndSetterWhenQuestionSupplied()
+    {
+        $mockQuestion = \Phake::mock(Question::class);
+        $this->generateEntityCommand->setEntityClassNameQuestion($mockQuestion);
+        $actualQuestion = $this->generateEntityCommand->getEntityClassNameQuestion();
         $this->assertInstanceOf(Question::class, $actualQuestion);
-        $expectedQuestion = 'What is the schema (i.e. database) name where the table exists? ' .
-            "<info>[{$currentDatabase}]</info> ";
-        $this->assertSame($expectedQuestion, $actualQuestion->getQuestion());
-        $this->assertSame($currentDatabase, $actualQuestion->getDefault());
-        $this->assertSame($databases, $actualQuestion->getAutocompleterValues());
-        $expectedCallable = [$this->generateEntityCommand, 'validateSchema'];
-        $this->assertSame($expectedCallable, $actualQuestion->getValidator());
+        $this->assertInstanceOf(\Phake_IMock::class, $actualQuestion);
+        $this->assertSame($mockQuestion, $actualQuestion);
     }
 
-    public function testInteractWhenSchemaNameNotSupplied()
+    public function testEntityClassNameGetterAndSetterWhenQuestionNotSupplied()
     {
-        $questionHelper = \Phake::mock(QuestionHelper::class);
-        $helperSet = \Phake::mock(HelperSet::class);
-        \Phake::when($helperSet)->get('question')
-            ->thenReturn($questionHelper);
-        $this->generateEntityCommand->setHelperSet($helperSet);
-        $input = \Phake::mock(Input::class);
-        \Phake::when($input)->getOption('schema-name')
-            ->thenReturn('');
-        \Phake::when($input)->getOption('table-name')
-            ->thenReturn('some_table');
-        \Phake::when($input)->getOption('entity-class-name')
-            ->thenReturn('some-entity-class');
-        $output = \Phake::mock(Output::class);
-        $this->hasEntityCreatorService();
-        $this->generateEntityCommand->setEntityCreatorService($this->entityCreatorService);
+        $this->generateEntityCommand->setEntityClassNameQuestion();
+        $actualQuestion = $this->generateEntityCommand->getEntityClassNameQuestion();
+        $this->assertDefaultEntityClassNameQuestion($actualQuestion);
+    }
 
-        $this->generateEntityCommand->interact($input, $output);
-        \Phake::verify($this->entityCreatorService, \Phake::times(1))->getAllDatabases();
-        \Phake::verify($this->entityCreatorService, \Phake::times(1))->getCurrentDatabaseName();
-        \Phake::verify($questionHelper, \Phake::times(1))->ask(\Phake::anyParameters());
+    public function testGetEntityClassNameWhenQuestionNotSet()
+    {
+        $actualQuestion = $this->generateEntityCommand->getEntityClassNameQuestion();
+        $this->assertDefaultEntityClassNameQuestion($actualQuestion);
     }
 
     public function testInteractWhenTableNameNotSupplied()
     {
-        $this->markTestIncomplete();
+        $this->hasQuestionHelper();
+        $this->generateEntityCommand->setHelperSet($this->helperSet);
+        $input = $this->hasInput('');
+        $output = \Phake::mock(Output::class);
+        $this->hasEntityCreatorService();
+        $this->generateEntityCommand->setEntityCreatorService($this->mockEntityCreatorService);
+
+        $this->generateEntityCommand->interact($input, $output);
+        \Phake::verify($this->mockEntityCreatorService, \Phake::times(1))->getTableNames();
+        $this->assertEquals($this->tableNames, $this->generateEntityCommand->getTableNames());
+        \Phake::verify($this->questionHelper, \Phake::times(1))->ask(\Phake::anyParameters());
     }
 
     public function testInteractWhenEntityClassNameNotSupplied()
     {
-        $this->markTestIncomplete();
+        $this->hasQuestionHelper();
+        $this->generateEntityCommand->setHelperSet($this->helperSet);
+        $input = $this->hasInput('some_table', '');
+        $output = \Phake::mock(Output::class);
+        $this->hasEntityCreatorService();
+        $this->generateEntityCommand->setEntityCreatorService($this->mockEntityCreatorService);
+
+        $this->generateEntityCommand->interact($input, $output);
+        \Phake::verify($this->questionHelper, \Phake::times(1))->ask(\Phake::anyParameters());
+    }
+
+    public function testExecute()
+    {
+        $this->hasEntityCreatorService();
+        $this->generateEntityCommand->setEntityCreatorService($this->mockEntityCreatorService);
+        $input = $this->hasInput();
+        $output = \Phake::mock(Output::class);
+        $this->generateEntityCommand->execute($input, $output);
+        \Phake::verify($this->mockEntityCreatorService, \Phake::times(1))->getCurrentDatabaseName();
+        \Phake::verify($this->mockEntityCreatorService, \Phake::times(1))->convertTableToEntityClass(
+            $this->getCurrentDatabase(),
+            'some_table',
+            'entityClassName'
+        );
+        \Phake::verify($output, \Phake::times(1))->writeln($this->entityClassContent);
     }
 
     protected function hasEntityCreatorService(): void
     {
-        $this->entityCreatorService = \Phake::mock(EntityCreatorService::class);
-        \Phake::when($this->entityCreatorService)->getAllDatabases()
+        $this->mockEntityCreatorService = \Phake::mock(EntityCreatorService::class);
+        \Phake::when($this->mockEntityCreatorService)->getAllDatabases()
             ->thenReturn($this->getDatabases());
-        \Phake::when($this->entityCreatorService)->getCurrentDatabaseName()
+        \Phake::when($this->mockEntityCreatorService)->getCurrentDatabaseName()
             ->thenReturn($this->getCurrentDatabase());
+        \Phake::when($this->mockEntityCreatorService)->getTableNames()
+            ->thenReturn($this->getTableNames());
+        $this->entityClassContent = '
+            class someEntityClass {
+                private $someProperty;
+                
+                protected function getSomeProperty()
+                {
+                    return $someProperty;
+                }
+                
+                public function setSomeProperty($someProperty)
+                {
+                    $this->someProperty = $someProperty;
+                }
+            }
+        ';
+        \Phake::when($this->mockEntityCreatorService)->convertTableToEntityClass(\Phake::anyParameters())
+            ->thenReturn($this->entityClassContent);
     }
 
     /**
@@ -188,7 +297,8 @@ class GenerateEntityCommandUnitTest extends TestCase
      */
     protected function getDatabases()
     {
-        return ['mysql', 'schema_information', 'database1'];
+        $this->databases = ['mysql', 'information_schema', 'database1'];
+        return $this->databases;
     }
 
     /**
@@ -196,6 +306,62 @@ class GenerateEntityCommandUnitTest extends TestCase
      */
     protected function getCurrentDatabase()
     {
-        return 'database1';
+        return $this->databases[2];
+    }
+
+    protected function getTableNames()
+    {
+        $this->tableNames = ['table1', 'table2', 'table3'];
+        return $this->tableNames;
+    }
+
+    protected function hasQuestionHelper(): void
+    {
+        $this->questionHelper = \Phake::mock(QuestionHelper::class);
+        $this->helperSet = \Phake::mock(HelperSet::class);
+        \Phake::when($this->helperSet)->get('question')
+            ->thenReturn($this->questionHelper);
+    }
+
+    /**
+     * @param $tableName
+     * @param $entityClassName
+     * @return Input|\Phake_IMock
+     */
+    protected function hasInput(
+        $tableName = 'some_table',
+        $entityClassName = 'entityClassName'
+    ): Input {
+        $input = \Phake::mock(Input::class);
+        \Phake::when($input)->getOption('table-name')
+            ->thenReturn($tableName);
+        \Phake::when($input)->getOption('entity-class-name')
+            ->thenReturn($entityClassName);
+
+        return $input;
+    }
+
+    /**
+     * @param $actualQuestion
+     */
+    private function assertDefaultEntityClassNameQuestion($actualQuestion): void
+    {
+        $this->assertInstanceOf(Question::class, $actualQuestion);
+        $this->assertNotInstanceOf(\Phake_IMock::class, $actualQuestion);
+        $this->assertSame('What is the FQDN of the entity class to create? ', $actualQuestion->getQuestion());
+        $this->assertSame([$this->generateEntityCommand, 'validateEntityClassName'], $actualQuestion->getValidator());
+    }
+
+    /**
+     * @param $actualQuestion
+     */
+    private function assertDefaultTableQuestion($actualQuestion): void
+    {
+        $this->assertInstanceOf(Question::class, $actualQuestion);
+        $this->assertNotInstanceOf(\Phake_IMock::class, $actualQuestion);
+        $this->assertSame('What is the name of the table to generate an entity for? ', $actualQuestion->getQuestion());
+        $this->assertSame('', $actualQuestion->getDefault());
+        $this->assertSame($this->getTableNames(), $actualQuestion->getAutocompleterValues());
+        $this->assertSame([$this->generateEntityCommand, 'validateTableName'], $actualQuestion->getValidator());
     }
 }

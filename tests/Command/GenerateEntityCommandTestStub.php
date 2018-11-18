@@ -32,6 +32,7 @@ use iDimensionz\EntityGeneratorBundle\Command\GenerateEntityCommand;
 use iDimensionz\EntityGeneratorBundle\Service\EntityCreatorService;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Question\Question;
 
 class GenerateEntityCommandTestStub extends GenerateEntityCommand
 {
@@ -55,8 +56,13 @@ class GenerateEntityCommandTestStub extends GenerateEntityCommand
         return parent::getEntityCreatorService();
     }
 
-    public function getSchemaQuestion()
+    public function getTableQuestion()
     {
-        return parent::getSchemaQuestion();
+        return parent::getTableQuestion();
+    }
+
+    public function getEntityClassNameQuestion(): Question
+    {
+        return parent::getEntityClassNameQuestion();
     }
 }

@@ -19,15 +19,15 @@ class GenerateEntityCommand extends ContainerAwareCommand
     /**
      * @var Question
      */
-    private $schemaQuestion;
+    private $tableQuestion;
     /**
      * @var array
      */
-    private $databases;
+    private $tableNames;
     /**
-     * @var string
+     * @var Question
      */
-    private $currentDatabase;
+    private $entityClassNameQuestion;
 
     /**
      * GenerateEntityCommand constructor.
@@ -45,12 +45,12 @@ class GenerateEntityCommand extends ContainerAwareCommand
         $this
             ->setName('idimensionz:generate:entity')
             ->setDescription('Generates the code for an entity class for the specified table.')
-            ->addOption(
-                'schema-name',
-                null,
-                InputOption::VALUE_REQUIRED,
-                'Schema (database) where the table exists.'
-            )
+//            ->addOption(
+//                'schema-name',
+//                null,
+//                InputOption::VALUE_REQUIRED,
+//                'Schema (database) where the table exists.'
+//            )
             ->addOption(
                 'table-name',
                 null,
@@ -77,33 +77,12 @@ class GenerateEntityCommand extends ContainerAwareCommand
          * @var QuestionHelper $questionHelper
          */
         $questionHelper = $this->getHelper('question');
-        $schemaName = $input->getOption('schema-name');
-        if (empty($schemaName)) {
-            $databases = $this->getEntityCreatorService()->getAllDatabases();
-            $this->setDatabases($databases);
-            $currentDatabase = $this->getEntityCreatorService()->getCurrentDatabaseName();
-            $this->setCurrentDatabase($currentDatabase);
-            $schemaQuestion = $this->getSchemaQuestion();
-            $schemaNameChoice = $questionHelper->ask($input, $output, $schemaQuestion);
-            $schemaName = $databases[$schemaNameChoice+1];
-        }
-        $output->writeln("You chose: <info>{$schemaName}</info>");
-        $input->setOption('schema-name', $schemaName);
 
         $tableName = $input->getOption('table-name');
         if (empty($tableName)) {
             $tableNames = $this->getEntityCreatorService()->getTableNames();
-            $tableQuestion = new Question('What is the name of the table to generate an entity for? ', '');
-            $tableQuestion->setAutocompleterValues($tableNames);
-            $tableQuestion->setValidator(
-                function ($inputTableName) use ($tableNames) {
-                    if (empty($inputTableName) || (!empty($inputTableName) && !in_array($inputTableName, $tableNames))) {
-                        throw new \RuntimeException('table-name must be a valid table name.');
-                    }
-
-                    return $inputTableName;
-                }
-            );
+            $this->setTableNames($tableNames);
+            $tableQuestion = $this->getTableQuestion();
             $tableName = $questionHelper->ask($input, $output, $tableQuestion);
         }
         $output->writeln("You selected table <info>{$tableName}</info>");
@@ -111,15 +90,7 @@ class GenerateEntityCommand extends ContainerAwareCommand
 
         $entityClassName = $input->getOption('entity-class-name');
         if (empty($entityClassName)) {
-            $entityQuestion = new Question('What is the FQDN of the entity class to create? ');
-            $entityQuestion->setValidator(
-                function ($response) {
-                    if (empty($response)) {
-                        throw new \RuntimeException('entity-class-name is a required value');
-                    }
-
-                    return $response;
-                });
+            $entityQuestion = $this->getEntityClassNameQuestion();
             $entityClassName = $questionHelper->ask($input, $output, $entityQuestion);
         }
         $input->setOption('entity-class-name', $entityClassName);
@@ -135,7 +106,7 @@ class GenerateEntityCommand extends ContainerAwareCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $schemaName = $input->getOption('schema-name');
+        $schemaName = $this->getEntityCreatorService()->getCurrentDatabaseName();
         $tableName = $input->getOption('table-name');
         $entityName = $input->getOption('entity-class-name');
         $entityClassCode = $this->getEntityCreatorService()->convertTableToEntityClass(
@@ -147,12 +118,32 @@ class GenerateEntityCommand extends ContainerAwareCommand
     }
 
     /**
-     * @param string $database
+     * @param string $inputTableName
      * @return bool
+     * @throws \Exception
      */
-    public function validateSchema(string $database)
+    public function validateTableName(string $inputTableName)
     {
-        return !empty($database) && in_array($database, $this->getDatabases());
+        $tableNames = $this->getTableNames();
+        if (empty($inputTableName) || (!empty($inputTableName) && !in_array($inputTableName, $tableNames))) {
+            throw new \Exception('Table name must be one of ' . implode(', ', $tableNames));
+        }
+
+        return $inputTableName;
+    }
+
+    /**
+     * @param string $entityClassName
+     * @return string
+     * @throws \Exception
+     */
+    public function validateEntityClassName(string $entityClassName)
+    {
+        if (empty($entityClassName) || class_exists($entityClassName)) {
+            throw new \Exception('entity-class-name is a required value and must not already exist');
+        }
+
+        return $entityClassName;
     }
 
     /**
@@ -172,65 +163,72 @@ class GenerateEntityCommand extends ContainerAwareCommand
     }
 
     /**
-     * @return array
+     * @param null|Question $tableQuestion
      */
-    public function getDatabases(): array
+    public function setTableQuestion(?Question $tableQuestion = null)
     {
-        return $this->databases;
-    }
-
-    /**
-     * @param array $databases
-     */
-    public function setDatabases(array $databases): void
-    {
-        $this->databases = $databases;
-    }
-
-    /**
-     * @return string
-     */
-    public function getCurrentDatabase(): string
-    {
-        return $this->currentDatabase;
-    }
-
-    /**
-     * @param string $currentDatabase
-     */
-    public function setCurrentDatabase(string $currentDatabase): void
-    {
-        $this->currentDatabase = $currentDatabase;
-    }
-
-    /**
-     * @param Question|null $schemaQuestion
-     */
-    public function setSchemaQuestion(?Question $schemaQuestion = null)
-    {
-        if (is_null($schemaQuestion)) {
-            $currentDatabase = $this->getCurrentDatabase();
-            $schemaQuestion = 'What is the schema (i.e. database) name where the table exists? ' .
-                "<info>[{$currentDatabase}]</info> ";
-            $schemaQuestion = new Question($schemaQuestion, $currentDatabase);
-            $databases = $this->getDatabases();
-            $schemaQuestion->setAutocompleterValues($databases);
-            $validator = [$this, 'validateSchema'];
-            $schemaQuestion->setValidator($validator);
+        if (is_null($tableQuestion)) {
+            $tableNames = $this->getTableNames();
+            $this->tableQuestion = new Question('What is the name of the table to generate an entity for? ', '');
+            $this->tableQuestion->setAutocompleterValues($tableNames);
+            $validator = [$this, 'validateTableName'];
+            $this->tableQuestion->setValidator($validator);
+        } else {
+            $this->tableQuestion = $tableQuestion;
         }
-
-        $this->schemaQuestion = $schemaQuestion;
     }
 
     /**
      * @return Question
      */
-    protected function getSchemaQuestion()
+    protected function getTableQuestion()
     {
-        if (!$this->schemaQuestion instanceof Question) {
-            $this->setSchemaQuestion();
+        if (!$this->tableQuestion instanceof Question) {
+            $this->setTableQuestion();
         }
 
-        return $this->schemaQuestion;
+        return $this->tableQuestion;
+    }
+
+    /**
+     * @param Question|null $question
+     */
+    public function setEntityClassNameQuestion(Question $question = null)
+    {
+        if (is_null($question)) {
+            $this->entityClassNameQuestion = new Question('What is the FQDN of the entity class to create? ');
+            $validator = [$this, 'validateEntityClassName'];
+            $this->entityClassNameQuestion->setValidator($validator);
+        } else {
+            $this->entityClassNameQuestion = $question;
+        }
+    }
+
+    /**
+     * @return Question
+     */
+    protected function getEntityClassNameQuestion(): Question
+    {
+        if (!$this->entityClassNameQuestion instanceof Question) {
+            $this->setEntityClassNameQuestion();
+        }
+
+        return $this->entityClassNameQuestion;
+    }
+
+    /**
+     * @return array
+     */
+    public function getTableNames(): array
+    {
+        return $this->tableNames;
+    }
+
+    /**
+     * @param array $tableNames
+     */
+    public function setTableNames(array $tableNames): void
+    {
+        $this->tableNames = $tableNames;
     }
 }
