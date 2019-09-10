@@ -298,16 +298,21 @@ class EntityCreatorServiceUnitTest extends TestCase
     public function testConvertColumnDataTypeConvertsFloatAndDecimalToFloat()
     {
         $this->entityCreatorService->setEntityPropertyModel(new EntityPropertyModel());
-        $types = ['FLOAT(9,2)', 'DECIMAL(9,2)'];
-        foreach ($types as $type) {
-            $this->entityCreatorService->convertColumnDataType($type, null, 9, 2);
-            $actualModel = $this->entityCreatorService->getEntityPropertyModel();
-            $this->assertSame('float', $actualModel->getPropertyDataType());
-            $this->assertSame('decimal', $actualModel->getDoctrineDataType());
-            $this->assertNull($actualModel->getDoctrineLength());
-            $this->assertSame(9, $actualModel->getDoctrinePrecision());
-            $this->assertSame(2, $actualModel->getDoctrineScale());
-        }
+        $this->entityCreatorService->convertColumnDataType('FLOAT', null, null, null);
+        $actualModel = $this->entityCreatorService->getEntityPropertyModel();
+        $this->assertSame('float', $actualModel->getPropertyDataType());
+        $this->assertSame('float', $actualModel->getDoctrineDataType());
+        $this->assertNull($actualModel->getDoctrineLength());
+        $this->assertNull($actualModel->getDoctrinePrecision());
+        $this->assertNull($actualModel->getDoctrineScale());
+
+        $this->entityCreatorService->convertColumnDataType('DECIMAL(9,2)', null, 9, 2);
+        $actualModel = $this->entityCreatorService->getEntityPropertyModel();
+        $this->assertSame('float', $actualModel->getPropertyDataType());
+        $this->assertSame('decimal', $actualModel->getDoctrineDataType());
+        $this->assertNull($actualModel->getDoctrineLength());
+        $this->assertSame(9, $actualModel->getDoctrinePrecision());
+        $this->assertSame(2, $actualModel->getDoctrineScale());
     }
 
     public function testConvertColumnDataTypeConvertsDateTimeAndDateToDateTime()

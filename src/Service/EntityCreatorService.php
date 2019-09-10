@@ -6,6 +6,7 @@ use Doctrine\DBAL\Schema\AbstractSchemaManager;
 use iDimensionz\EntityGeneratorBundle\Model\ColumnDefinitionModel;
 use iDimensionz\EntityGeneratorBundle\Model\EntityPropertyModel;
 use iDimensionz\EntityGeneratorBundle\Provider\ColumnDefinitionProviderInterface;
+use Twig\Environment;
 
 class EntityCreatorService
 {
@@ -22,7 +23,7 @@ class EntityCreatorService
      */
     private $entityProperties;
     /**
-     * @var \Twig_Environment
+     * @var Environment
      */
     private $twig;
     /**
@@ -30,7 +31,7 @@ class EntityCreatorService
      */
     private $entityPropertyModel;
 
-    public function __construct(ColumnDefinitionProviderInterface $columnDefinitionProvider, AbstractSchemaManager $schemaManager,  \Twig_Environment $twig)
+    public function __construct(ColumnDefinitionProviderInterface $columnDefinitionProvider, AbstractSchemaManager $schemaManager,  Environment $twig)
     {
         $this->setColumnDefinitionProvider($columnDefinitionProvider);
         $this->setSchemaManager($schemaManager);
@@ -42,9 +43,9 @@ class EntityCreatorService
      * @param string $tableName
      * @param string $entityClassName
      * @return string   Code for the entity class.
-     * @throws \Twig_Error_Loader
-     * @throws \Twig_Error_Runtime
-     * @throws \Twig_Error_Syntax
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
      */
     public function convertTableToEntityClass(string $schemaName, string $tableName, string $entityClassName)
     {
@@ -305,17 +306,17 @@ class EntityCreatorService
     }
 
     /**
-     * @return \Twig_Environment
+     * @return Environment
      */
-    protected function getTwig(): \Twig_Environment
+    protected function getTwig(): Environment
     {
         return $this->twig;
     }
 
     /**
-     * @param \Twig_Environment $twig
+     * @param Environment $twig
      */
-    public function setTwig(\Twig_Environment $twig): void
+    public function setTwig(Environment $twig): void
     {
         $this->twig = $twig;
     }
