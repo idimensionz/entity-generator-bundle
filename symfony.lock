@@ -53,9 +53,6 @@
     "doctrine/reflection": {
         "version": "v1.0.0"
     },
-    "fig/link-util": {
-        "version": "1.0.0"
-    },
     "jdorn/sql-formatter": {
         "version": "v1.2.17"
     },
@@ -79,9 +76,6 @@
     },
     "psr/log": {
         "version": "1.0.2"
-    },
-    "psr/simple-cache": {
-        "version": "1.0.1"
     },
     "sebastian/comparator": {
         "version": "3.0.2"
@@ -113,14 +107,20 @@
             "ref": "b14c7f62fabeedf256d3211b0f704402b5530ba1"
         }
     },
-    "symfony/polyfill-apcu": {
-        "version": "v1.9.0"
-    },
     "symfony/polyfill-intl-icu": {
         "version": "v1.9.0"
     },
+    "symfony/polyfill-intl-idn": {
+        "version": "v1.15.0"
+    },
     "symfony/polyfill-mbstring": {
         "version": "v1.9.0"
+    },
+    "symfony/polyfill-php72": {
+        "version": "v1.15.0"
+    },
+    "symfony/polyfill-php73": {
+        "version": "v1.15.0"
     },
     "symfony/service-contracts": {
         "version": "v2.0.1"
